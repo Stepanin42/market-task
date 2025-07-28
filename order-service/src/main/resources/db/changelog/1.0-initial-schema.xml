@@ -1,0 +1,90 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1" author="author">
+        <sql>
+            CREATE TYPE order_status AS ENUM ('CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED');
+        </sql>
+    </changeSet>
+
+    <changeSet id="2" author="author">
+        <preConditions onFail="MARK_RAN">
+            <dbms type="postgresql"/>
+            <not><tableExists tableName="orders" /></not>
+        </preConditions>
+        <createTable tableName="orders">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="customer_phone" type="varchar(15)">
+                <constraints nullable="false" />
+            </column>
+            <column name="total_price" type="decimal(10,2)">
+                <constraints nullable="false" />
+            </column>
+            <column name="create_date" type="timestamp" >
+                <constraints nullable="false" />
+            </column>
+            <column name="delivery_address" type="varchar(150)">
+                <constraints nullable="false" />
+            </column>
+            <column name="status" type="order_status" defaultValue="CREATED">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="author">
+        <preConditions onFail="MARK_RAN">
+            <dbms type="postgresql"/>
+            <tableExists tableName="orders"/>
+            <not><tableExists tableName="orders_products" /></not>
+        </preConditions>
+        <createTable tableName="order_products">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="integer" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_at_order" type="decimal(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_price" type="decimal(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="order_products"
+                baseColumnNames="order_id"
+                referencedTableName="orders"
+                referencedColumnNames="id"
+                constraintName="fk_order_product"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="update_status_type_for_postgres" author="author">
+        <preConditions onFail="MARK_RAN">
+            <dbms type="postgresql"/>
+            <columnExists tableName="orders" columnName="status"/>
+            <columnExists tableName="orders" columnName="id"/>
+        </preConditions>
+        <sql>
+            ALTER TABLE orders ALTER COLUMN status TYPE order_status USING status::order_status;
+            ALTER TABLE orders ALTER COLUMN status SET DEFAULT 'CREATED';
+        </sql>
+    </changeSet>
+</databaseChangeLog>

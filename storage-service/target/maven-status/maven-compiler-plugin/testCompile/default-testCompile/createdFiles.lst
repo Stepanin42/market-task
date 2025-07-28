@@ -1,0 +1,4 @@
+com\market\storage\service\CategoryServiceTest.class
+com\market\storage\resource\CategoryResourceTest.class
+com\market\storage\resource\ProductResourceTest.class
+com\market\storage\service\ProductServiceTest.class
